@@ -1,64 +1,261 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>QuizGameSoo 3D</title>
-  <style>
-    body { margin: 0; overflow: hidden; font-family: sans-serif; }
-    #ui {
-      position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-      color: white; background: rgba(0,0,0,0.7); padding: 15px 30px;
-      border-radius: 10px; font-size: 20px; text-align: center;
-    }
-  </style>
-
-  <!-- Three.js für 3D-Grafik im Browser laden -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Steal a Brainrot - 3D Edition</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #06060c;
+            font-family: 'Arial', sans-serif;
+            user-select: none;
+        }
+        canvas {
+            display: block;
+        }
+        #ui {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: #fff;
+            font-size: 22px;
+            font-weight: bold;
+            text-shadow: 2px 2px 6px rgba(0,0,0,0.9);
+            z-index: 10;
+        }
+        #base-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(15, 15, 30, 0.85);
+            backdrop-filter: blur(10px);
+            border: 2px solid #ff0055;
+            border-radius: 14px;
+            padding: 15px;
+            color: white;
+            width: 230px;
+            z-index: 10;
+            box-shadow: 0 8px 25px rgba(255,0,85,0.3);
+        }
+        #base-panel h3 {
+            margin: 0 0 10px 0;
+            font-size: 16px;
+            color: #ff0055;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        .upgrade-btn {
+            background: linear-gradient(135deg, #ff0055, #ff5500);
+            color: white;
+            border: none;
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 8px;
+            font-size: 13px;
+            transition: 0.2s;
+        }
+        .upgrade-btn:hover {
+            transform: scale(1.02);
+            filter: brightness(1.2);
+        }
+        #instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 10, 20, 0.85);
+            backdrop-filter: blur(10px);
+            color: #00ffcc;
+            padding: 12px 25px;
+            border-radius: 12px;
+            border: 2px solid #00ffcc;
+            font-size: 14px;
+            text-align: center;
+            z-index: 10;
+            box-shadow: 0 5px 20px rgba(0,255,204,0.2);
+        }
+    </style>
 </head>
 <body>
 
-  <div id="ui">🎮 QuizGameSoo 3D 🎮</div>
+    <div id="ui">
+        Geld: $<span id="score">0</span><br>
+        <span style="font-size: 14px; color: #aaa;">Brainrots in Basis: <span id="brainrot-count">0</span></span>
+    </div>
 
-  <script>
-    // 1. 3D-Szene einrichten
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1a1a);
+    <div id="base-panel">
+        <h3>DEINE BASIS</h3>
+        <div>Einkommen: <span id="income">1</span> $/Sek</div>
+        <button class="upgrade-btn" onclick="buyBrainrot()">Brainrot kaufen ($50)</button>
+    </div>
 
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+    <div id="instructions">Steuerung mit W, A, S, D – Sammle Kisten ein und bringe sie in deine Basis!</div>
 
-    // 2. Licht hinzufügen
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(5, 10, 7).normalize();
-    scene.add(light);
-    scene.add(new THREE.AmbientLight(0x404040));
+    <!-- Three.js Bibliothek -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x06060c);
+        scene.fog = new THREE.FogExp2(0x06060c, 0.025);
 
-    // 3. Einen 3D-Würfel erstellen (Spieler / Objekt)
-    const geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
-    const material = new THREE.MeshPhongMaterial({ color: 0x00ff88 });
-    const cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
+        const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.body.appendChild(renderer.domElement);
 
-    camera.position.z = 5;
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+        scene.add(ambientLight);
 
-    // 4. Animation (Würfel drehen)
-    function animate() {
-      requestAnimationFrame(animate);
-      cube.rotation.x += 0.01;
-      cube.rotation.y += 0.01;
-      renderer.render(scene, camera);
-    }
-    animate();
+        const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        dirLight.position.set(20, 40, 20);
+        dirLight.castShadow = true;
+        dirLight.shadow.mapSize.width = 2048;
+        dirLight.shadow.mapSize.height = 2048;
+        scene.add(dirLight);
 
-    // Fenstergröße anpassen
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-  </script>
+        const floorGeo = new THREE.PlaneGeometry(60, 60);
+        const floorMat = new THREE.MeshStandardMaterial({ color: 0x111122, roughness: 0.8, metalness: 0.2 });
+        const floor = new THREE.Mesh(floorGeo, floorMat);
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        const baseGeo = new THREE.BoxGeometry(8, 0.15, 8);
+        const baseMat = new THREE.MeshStandardMaterial({ color: 0xff0055, emissive: 0xff0055, emissiveIntensity: 0.4, roughness: 0.3 });
+        const playerBase = new THREE.Mesh(baseGeo, baseMat);
+        playerBase.position.set(0, 0.08, 14);
+        playerBase.receiveShadow = true;
+        scene.add(playerBase);
+
+        // Spieler-Gruppe (Ohne Shirt, mit Hautfarbe)
+        const playerGroup = new THREE.Group();
+
+        const bodyGeo = new THREE.BoxGeometry(1.2, 1.5, 0.8);
+        const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdbac, roughness: 0.6 }); // Hautfarbe statt Shirt
+        const body = new THREE.Mesh(bodyGeo, skinMat);
+        body.position.y = 1.2;
+        body.castShadow = true;
+        playerGroup.add(body);
+
+        const headGeo = new THREE.SphereGeometry(0.5, 16, 16);
+        const headMat = new THREE.MeshStandardMaterial({ color: 0xffdbac, roughness: 0.6 });
+        const head = new THREE.Mesh(headGeo, headMat);
+        head.position.y = 2.2;
+        head.castShadow = true;
+        playerGroup.add(head);
+
+        playerGroup.position.set(0, 0, 14);
+        scene.add(playerGroup);
+
+        const lootItems = [];
+        const lootGeo = new THREE.BoxGeometry(0.9, 0.9, 0.9);
+        const lootMat = new THREE.MeshStandardMaterial({ 
+            color: 0x00ffcc, 
+            emissive: 0x00ffcc,
+            emissiveIntensity: 0.6,
+            roughness: 0.2,
+            metalness: 0.8 
+        });
+
+        function spawnLoot() {
+            const loot = new THREE.Mesh(lootGeo, lootMat);
+            loot.position.set(
+                (Math.random() - 0.5) * 40,
+                0.5,
+                (Math.random() - 0.5) * 40
+            );
+            loot.castShadow = true;
+            scene.add(loot);
+            lootItems.push(loot);
+        }
+
+        for (let i = 0; i < 10; i++) {
+            spawnLoot();
+        }
+
+        camera.position.set(0, 12, 22);
+        camera.lookAt(playerGroup.position);
+
+        const keys = {};
+        window.addEventListener('keydown', (e) => keys[e.key.toLowerCase()] = true);
+        window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
+
+        let money = 0;
+        let brainrotsInBase = 0;
+        let incomeRate = 1;
+        let carryingItem = false;
+
+        setInterval(() => {
+            if (brainrotsInBase > 0) {
+                money += brainrotsInBase * incomeRate;
+                document.getElementById('score').innerText = money;
+            }
+        }, 1000);
+
+        function buyBrainrot() {
+            if (money >= 50) {
+                money -= 50;
+                brainrotsInBase += 1;
+                document.getElementById('score').innerText = money;
+                document.getElementById('brainrot-count').innerText = brainrotsInBase;
+                document.getElementById('income').innerText = brainrotsInBase;
+            } else {
+                alert("Nicht genug Geld! Du brauchst $50.");
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const speed = 0.2;
+            if (keys['w'] || keys['arrowup']) playerGroup.position.z -= speed;
+            if (keys['s'] || keys['arrowdown']) playerGroup.position.z += speed;
+            if (keys['a'] || keys['arrowleft']) playerGroup.position.x -= speed;
+            if (keys['d'] || keys['arrowright']) playerGroup.position.x += speed;
+
+            camera.position.x += (playerGroup.position.x - camera.position.x) * 0.1;
+            camera.position.z += ((playerGroup.position.z + 12) - camera.position.z) * 0.1;
+            camera.position.y = 12;
+            camera.lookAt(playerGroup.position.x, playerGroup.position.y - 2, playerGroup.position.z);
+
+            lootItems.forEach((loot, index) => {
+                loot.rotation.x += 0.02;
+                loot.rotation.y += 0.03;
+
+                const dist = playerGroup.position.distanceTo(loot.position);
+                if (dist < 1.4 && !carryingItem) {
+                    scene.remove(loot);
+                    lootItems.splice(index, 1);
+                    carryingItem = true;
+                }
+            });
+
+            const distToBase = playerGroup.position.distanceTo(playerBase.position);
+            if (distToBase < 4 && carryingItem) {
+                carryingItem = false;
+                brainrotsInBase += 1;
+                document.getElementById('brainrot-count').innerText = brainrotsInBase;
+                document.getElementById('income').innerText = brainrotsInBase;
+                spawnLoot();
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    </script>
 </body>
 </html>
